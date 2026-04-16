@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery — PhotoDemo</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/gallery.html" class="nav-brand">PhotoDemo</a>
+    <div class="nav-links">
+      <a href="/gallery.html" class="active">Gallery</a>
+      <a href="/upload.html">Upload</a>
+      <button id="logoutBtn" class="btn btn-sm">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h2>Your Gallery</h2>
+      <p class="subtitle">
+        <span class="badge node">Node.js + Express</span> Gallery Service
+        &mdash; photos served via <span class="badge nginx">Nginx</span> from shared volume
+      </p>
+      <div id="pollingIndicator" class="polling hidden">
+        <span class="spinner"></span> Processing images… polling every 3s
+      </div>
+    </div>
+
+    <div id="gallery" class="gallery-grid">
+      <p class="empty-state" id="emptyState">No photos yet. <a href="/upload.html">Upload one!</a></p>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox hidden">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <img id="lightboxImg" src="" alt="full size">
+    <p id="lightboxCaption"></p>
+  </div>
+
+  <script src="/js/gallery.js"></script>
+</body>
+</html>

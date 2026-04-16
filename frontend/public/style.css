@@ -1,0 +1,320 @@
+/* ── Reset & base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f2f5;
+  color: #222;
+  min-height: 100vh;
+}
+
+a { color: #4f7ef7; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Navbar ───────────────────────────────────────────────────────────────── */
+.navbar {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 2rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand { font-weight: 700; font-size: 1.2rem; color: #222; }
+.nav-links  { display: flex; align-items: center; gap: 1.5rem; }
+.nav-links a { color: #555; font-size: 0.95rem; }
+.nav-links a.active { color: #4f7ef7; font-weight: 600; }
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+.card {
+  max-width: 440px;
+  margin: 4rem auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.08);
+  padding: 2.5rem;
+}
+
+.card h2 { margin-bottom: .25rem; font-size: 1.6rem; }
+.subtitle { color: #666; font-size: .88rem; margin-bottom: 1.8rem; }
+
+/* ── Landing ──────────────────────────────────────────────────────────────── */
+.landing {
+  max-width: 620px;
+  margin: 6rem auto;
+  text-align: center;
+  padding: 0 1rem;
+}
+
+.landing h1 { font-size: 3rem; margin-bottom: .5rem; }
+.landing > p { color: #555; font-size: 1.1rem; margin-bottom: 2rem; }
+
+.landing .actions { display: flex; justify-content: center; gap: 1rem; margin-bottom: 3rem; }
+
+.arch {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  text-align: left;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+.arch h3 { margin-bottom: 1rem; color: #333; }
+.arch ul  { list-style: none; display: flex; flex-direction: column; gap: .6rem; }
+.arch li  { font-size: .9rem; color: #444; }
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.badge.go     { background: #00acd7; color: #fff; }
+.badge.node   { background: #68a063; color: #fff; }
+.badge.python { background: #3572a5; color: #fff; }
+.badge.rabbit { background: #f60; color: #fff; }
+.badge.nginx  { background: #009900; color: #fff; }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-block;
+  padding: .6rem 1.4rem;
+  border-radius: 8px;
+  font-size: .95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity .15s;
+}
+
+.btn:hover   { opacity: .85; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-primary   { background: #4f7ef7; color: #fff; }
+.btn-secondary { background: #fff; color: #4f7ef7; border: 2px solid #4f7ef7; }
+.btn-full      { width: 100%; }
+.btn-sm        { padding: .35rem .9rem; font-size: .85rem; background: #f3f4f6; color: #555; }
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #4f7ef7;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+}
+
+/* ── Form elements ────────────────────────────────────────────────────────── */
+.form-group { margin-bottom: 1.2rem; }
+
+label {
+  display: block;
+  font-size: .85rem;
+  font-weight: 600;
+  margin-bottom: .4rem;
+  color: #444;
+}
+
+label small { font-weight: 400; color: #888; }
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: .6rem .9rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color .15s;
+}
+
+input:focus { outline: none; border-color: #4f7ef7; }
+
+.link { margin-top: 1.4rem; font-size: .9rem; color: #666; }
+
+/* ── Feedback messages ────────────────────────────────────────────────────── */
+.error, .success {
+  margin-top: 1rem;
+  padding: .7rem 1rem;
+  border-radius: 8px;
+  font-size: .9rem;
+}
+
+.error   { background: #fee2e2; color: #b91c1c; }
+.success { background: #dcfce7; color: #15803d; }
+.hidden  { display: none !important; }
+
+/* ── Flow hint ────────────────────────────────────────────────────────────── */
+.flow-hint {
+  margin-top: 2rem;
+  padding: 1rem 1.2rem;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: .82rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+.flow-hint strong { display: block; margin-bottom: .4rem; color: #333; }
+.flow-hint code { background: #e8edf5; padding: 1px 5px; border-radius: 4px; font-size: .8rem; }
+.flow-hint ol { padding-left: 1.2rem; margin-top: .5rem; }
+.flow-hint li { margin-bottom: .3rem; }
+
+/* ── Drop zone (upload) ───────────────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed #c8d0e0;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.2rem;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drop-zone.drag-over { border-color: #4f7ef7; background: #eef2ff; }
+
+.drop-label p { color: #666; font-size: .9rem; margin-top: .5rem; }
+.drop-label .hint { font-size: .78rem; color: #9ca3af; margin-top: .3rem; }
+.drop-icon  { font-size: 2.5rem; }
+
+.preview {
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+/* ── Gallery grid ─────────────────────────────────────────────────────────── */
+.container   { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+.page-header { margin-bottom: 2rem; }
+.page-header h2 { font-size: 1.6rem; }
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.2rem;
+}
+
+.photo-card {
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 8px rgba(0,0,0,.07);
+  position: relative;
+  transition: transform .15s;
+}
+
+.photo-card:hover { transform: translateY(-2px); }
+
+.photo-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  cursor: pointer;
+  display: block;
+}
+
+.photo-caption {
+  padding: .5rem .7rem;
+  font-size: .78rem;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.processing-placeholder {
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #9ca3af;
+  gap: .5rem;
+  font-size: .85rem;
+}
+
+/* ── Status badges ────────────────────────────────────────────────────────── */
+.status-badge {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+.status-badge.processed { background: #dcfce7; color: #15803d; }
+.status-badge.pending   { background: #fef3c7; color: #92400e; }
+
+/* ── Polling indicator ────────────────────────────────────────────────────── */
+.polling {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: #6b7280;
+  font-size: .85rem;
+  margin-top: .5rem;
+}
+
+.empty-state { color: #9ca3af; font-size: 1rem; text-align: center; grid-column: 1/-1; margin-top: 2rem; }
+
+/* ── Spinner ──────────────────────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d1d5db;
+  border-top-color: #4f7ef7;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+/* ── Lightbox ─────────────────────────────────────────────────────────────── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.lightbox img {
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+#lightboxCaption { color: #ccc; margin-top: .8rem; font-size: .9rem; }
+
+.lightbox-close {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.5rem;
+  font-size: 2rem;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+}

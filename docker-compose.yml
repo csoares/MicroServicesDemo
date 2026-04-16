@@ -1,0 +1,128 @@
+version: '3.9'
+
+services:
+
+  # ─────────────────────────────────────────
+  # Infrastructure
+  # ─────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: demo-postgres
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo123
+      POSTGRES_DB: postgres   # default db; actual dbs created in init scripts
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    networks:
+      - demo-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: demo-rabbitmq
+    # default credentials: guest / guest
+    ports:
+      - "15672:15672"   # management UI — open http://localhost:15672 in class
+    networks:
+      - demo-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ─────────────────────────────────────────
+  # Microservices
+  # ─────────────────────────────────────────
+
+  # 1. Auth Service — Go + Gin
+  auth-service:
+    build: ./auth-service
+    container_name: demo-auth
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: demo
+      DB_PASSWORD: demo123
+      DB_NAME: auth_db
+      JWT_SECRET: supersecretkey-change-in-production   # teaching moment: don't hardcode secrets
+      PORT: "8001"
+    networks:
+      - demo-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # 2. Gallery Service — Node.js + Express
+  gallery-service:
+    build: ./gallery-service
+    container_name: demo-gallery
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: demo
+      DB_PASSWORD: demo123
+      DB_NAME: gallery_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      UPLOAD_DIR: /uploads
+      PORT: "8002"
+    volumes:
+      - uploads:/uploads
+    networks:
+      - demo-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # 3. Image Processing Service — Python + FastAPI
+  image-processor:
+    build: ./image-processor
+    container_name: demo-processor
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      UPLOAD_DIR: /uploads
+    volumes:
+      - uploads:/uploads
+    networks:
+      - demo-net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  # ─────────────────────────────────────────
+  # Frontend
+  # ─────────────────────────────────────────
+
+  frontend:
+    build: ./frontend
+    container_name: demo-frontend
+    ports:
+      - "3000:80"     # open http://localhost:3000 to use the app
+    volumes:
+      - uploads:/uploads:ro   # read-only: nginx serves images from shared volume
+    networks:
+      - demo-net
+    depends_on:
+      - auth-service
+      - gallery-service
+
+# ─────────────────────────────────────────
+# Shared resources
+# ─────────────────────────────────────────
+
+volumes:
+  postgres_data:
+  uploads:         # shared between gallery-service, image-processor, and frontend
+
+networks:
+  demo-net:
+    driver: bridge

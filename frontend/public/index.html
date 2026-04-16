@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhotoDemo — Microservices Gallery</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="landing">
+    <h1>PhotoDemo</h1>
+    <p>A microservices demo built with Go, Node.js, and Python</p>
+    <div class="actions">
+      <a href="/login.html" class="btn btn-primary">Login</a>
+      <a href="/register.html" class="btn btn-secondary">Register</a>
+    </div>
+    <div class="arch">
+      <h3>Architecture</h3>
+      <ul>
+        <li><strong>Auth Service</strong> — Go + Gin — JWT authentication</li>
+        <li><strong>Gallery Service</strong> — Node.js + Express — photo upload &amp; metadata</li>
+        <li><strong>Image Processor</strong> — Python + FastAPI — async resize via RabbitMQ</li>
+        <li><strong>Message Queue</strong> — RabbitMQ — event-driven processing</li>
+        <li><strong>Database</strong> — PostgreSQL — persistent storage</li>
+      </ul>
+    </div>
+  </div>
+  <script>
+    // If already logged in, go straight to the gallery
+    if (localStorage.getItem('token')) {
+      window.location.href = '/gallery.html';
+    }
+  </script>
+</body>
+</html>

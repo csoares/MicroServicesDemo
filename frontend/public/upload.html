@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload — PhotoDemo</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/gallery.html" class="nav-brand">PhotoDemo</a>
+    <div class="nav-links">
+      <a href="/gallery.html">Gallery</a>
+      <a href="/upload.html" class="active">Upload</a>
+      <button id="logoutBtn" class="btn btn-sm">Logout</button>
+    </div>
+  </nav>
+
+  <div class="card">
+    <h2>Upload a Photo</h2>
+    <p class="subtitle">
+      Handled by <span class="badge node">Node.js + Express</span> Gallery Service
+      → <span class="badge rabbit">RabbitMQ</span>
+      → <span class="badge python">Python + FastAPI</span> Image Processor
+    </p>
+
+    <form id="uploadForm">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*" hidden>
+        <div class="drop-label" id="dropLabel">
+          <span class="drop-icon">📷</span>
+          <p>Drag &amp; drop an image here, or <button type="button" id="browseBtn" class="link-btn">browse</button></p>
+          <p class="hint">JPEG, PNG, WebP — max 10 MB</p>
+        </div>
+        <img id="preview" class="preview hidden" alt="preview">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="submitBtn" disabled>Upload</button>
+      <div id="error"   class="error   hidden"></div>
+      <div id="success" class="success hidden"></div>
+    </form>
+
+    <div class="flow-hint">
+      <strong>Event flow after upload:</strong>
+      <ol>
+        <li>gallery-service saves original to <code>/uploads/originals/</code></li>
+        <li>gallery-service publishes <code>photo.uploaded</code> to RabbitMQ</li>
+        <li>image-processor consumes event, resizes with Pillow, saves thumbnail + medium</li>
+        <li>image-processor publishes <code>image.processed</code> to RabbitMQ</li>
+        <li>gallery-service updates the database row — <em>status: pending → processed</em></li>
+        <li>Gallery page polls and shows the thumbnail</li>
+      </ol>
+      <p>Watch the <a href="http://localhost:15672" target="_blank">RabbitMQ Management UI</a> (guest/guest) while uploading!</p>
+    </div>
+  </div>
+
+  <script src="/js/upload.js"></script>
+</body>
+</html>

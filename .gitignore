@@ -1,0 +1,30 @@
+# ── Environment & secrets ─────────────────────────────────────────────────────
+.env
+*.local
+
+# ── Go ────────────────────────────────────────────────────────────────────────
+auth-service/vendor/
+
+# ── Node.js ───────────────────────────────────────────────────────────────────
+gallery-service/node_modules/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+image-processor/.venv/
+image-processor/venv/
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# Ignore locally uploaded files (Docker named volume in prod, but may spill locally)
+uploads/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editors ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
