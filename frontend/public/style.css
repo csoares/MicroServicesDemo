@@ -246,6 +246,30 @@ input:focus { outline: none; border-color: #4f7ef7; }
   font-size: .85rem;
 }
 
+/* ── Delete button ────────────────────────────────────────────────────────── */
+.delete-btn {
+  position: absolute;
+  top: .4rem;
+  left: .4rem;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s, background .15s;
+}
+
+.photo-card:hover .delete-btn { opacity: 1; }
+.delete-btn:hover { background: #dc2626; }
+
 /* ── Status badges ────────────────────────────────────────────────────────── */
 .status-badge {
   position: absolute;

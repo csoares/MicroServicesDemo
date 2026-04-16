@@ -15,7 +15,13 @@ module.exports = {
 
   rabbitmqUrl: process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672',
 
-  uploadDir: process.env.UPLOAD_DIR || '/uploads',
+  minio: {
+    endPoint:  process.env.MINIO_ENDPOINT   || 'minio',
+    port:      parseInt(process.env.MINIO_PORT || '9000', 10),
+    accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
+    secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+    bucket:    process.env.MINIO_BUCKET     || 'photos',
+  },
 
   // The auth-service base URL — used for token validation (service-to-service call)
   authServiceUrl: process.env.AUTH_SERVICE_URL || 'http://auth-service:8001',

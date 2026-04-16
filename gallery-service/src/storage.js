@@ -1,35 +1,21 @@
 'use strict';
 
 const multer = require('multer');
-const path   = require('path');
-const { v4: uuidv4 } = require('uuid');
-const config = require('./config');
 
-// Store uploaded files on disk under /uploads/originals/
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, path.join(config.uploadDir, 'originals'));
-  },
-  filename: (_req, file, cb) => {
-    // Prefix with UUID to avoid filename collisions when multiple users upload
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-    cb(null, `${uuidv4()}-${safeName}`);
-  },
-});
-
-// Only accept image files
-const fileFilter = (_req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (allowed.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are accepted'), false);
-  }
-};
-
+// Memory storage — files land in req.file.buffer instead of on disk.
+// gallery-service streams them straight to MinIO, so no local filesystem needed.
+// Teaching note: for very large files (> hundreds of MB) disk buffering would
+// be safer to avoid OOM; memory storage is fine for typical photo sizes.
 const upload = multer({
-  storage,
-  fileFilter,
+  storage: multer.memoryStorage(),
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are accepted'), false);
+    }
+  },
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
 

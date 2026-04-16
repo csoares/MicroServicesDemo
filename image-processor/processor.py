@@ -1,55 +1,88 @@
 """
-processor.py — Image resize and compression using Pillow.
+processor.py — Image resize and compression using Pillow + MinIO.
+
+Images are downloaded from MinIO, processed in memory, and uploaded back.
+No local filesystem needed — the container is fully stateless.
 
 Teaching note:
   This module has no knowledge of HTTP or message queues.
-  It only knows about files and images — good separation of concerns.
+  It only knows about images and object storage — good separation of concerns.
 """
 
+import io
 import os
 import time
+
+from minio import Minio
 from PIL import Image
 
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/uploads")
-
-# Set PROCESSING_DELAY (seconds) in docker-compose.yml to simulate a slow
-# processing pipeline — useful in class to show the pending → processed transition.
 PROCESSING_DELAY = int(os.getenv("PROCESSING_DELAY", "0"))
 
 
-def process_image(original_path: str, photo_id: str) -> dict:
+def make_minio_client() -> Minio:
+    return Minio(
+        os.getenv("MINIO_ENDPOINT", "minio:9000"),
+        access_key=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
+        secret_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
+        secure=False,
+    )
+
+
+def process_image(minio_client: Minio, bucket: str, object_key: str, photo_id: str) -> dict:
     """
-    Open the original image, create two resized/compressed variants, and return
-    their paths.
+    Download the original image from MinIO, create two resized variants,
+    upload them back, and return their object keys.
+
+    Args:
+        minio_client: initialised MinIO client
+        bucket:       bucket name (e.g. 'photos')
+        object_key:   key of the original (e.g. 'originals/uuid-file.jpg')
+        photo_id:     UUID used to name the output objects
 
     Returns:
-        dict with 'thumbnailPath' and 'mediumPath' keys.
+        dict with 'thumbnailKey' and 'mediumKey'
     """
     if PROCESSING_DELAY > 0:
         time.sleep(PROCESSING_DELAY)
 
-    with Image.open(original_path) as img:
-        # convert("RGB") normalises all formats (PNG/RGBA, GIF palette, etc.) to JPEG-compatible.
-        # Without this, saving a PNG with an alpha channel as JPEG raises:
-        #   OSError: cannot write mode RGBA as JPEG
-        img = img.convert("RGB")
+    # ── Download original from MinIO ─────────────────────────────────────────
+    response = minio_client.get_object(bucket, object_key)
+    image_data = response.read()
+    response.close()
+    response.release_conn()
 
-        # ── Thumbnail 200×200 ────────────────────────────────────────────────
-        # Image.thumbnail() preserves the aspect ratio and never upscales.
-        thumb = img.copy()
-        thumb.thumbnail((200, 200), Image.LANCZOS)
-        thumb_path = os.path.join(UPLOAD_DIR, "thumbnails", f"{photo_id}.jpg")
-        os.makedirs(os.path.dirname(thumb_path), exist_ok=True)
-        thumb.save(thumb_path, "JPEG", quality=75, optimize=True)
+    img = Image.open(io.BytesIO(image_data))
 
-        # ── Medium 800×600 ───────────────────────────────────────────────────
-        medium = img.copy()
-        medium.thumbnail((800, 600), Image.LANCZOS)
-        medium_path = os.path.join(UPLOAD_DIR, "medium", f"{photo_id}.jpg")
-        os.makedirs(os.path.dirname(medium_path), exist_ok=True)
-        medium.save(medium_path, "JPEG", quality=85, optimize=True)
+    # convert("RGB") normalises all formats (PNG/RGBA, GIF palette…) to JPEG-compatible.
+    # Without this, saving a PNG with an alpha channel as JPEG raises:
+    #   OSError: cannot write mode RGBA as JPEG
+    img = img.convert("RGB")
+
+    # ── Thumbnail 200×200 ────────────────────────────────────────────────────
+    thumb = img.copy()
+    thumb.thumbnail((200, 200), Image.LANCZOS)
+    thumb_buf = io.BytesIO()
+    thumb.save(thumb_buf, "JPEG", quality=75, optimize=True)
+    thumb_buf.seek(0)
+    thumbnail_key = f"thumbnails/{photo_id}.jpg"
+    minio_client.put_object(
+        bucket, thumbnail_key, thumb_buf, len(thumb_buf.getvalue()),
+        content_type="image/jpeg",
+    )
+
+    # ── Medium 800×600 ───────────────────────────────────────────────────────
+    medium = img.copy()
+    medium.thumbnail((800, 600), Image.LANCZOS)
+    medium_buf = io.BytesIO()
+    medium.save(medium_buf, "JPEG", quality=85, optimize=True)
+    medium_buf.seek(0)
+    medium_key = f"medium/{photo_id}.jpg"
+    minio_client.put_object(
+        bucket, medium_key, medium_buf, len(medium_buf.getvalue()),
+        content_type="image/jpeg",
+    )
 
     return {
-        "thumbnailPath": thumb_path,
-        "mediumPath":    medium_path,
+        "thumbnailKey": thumbnail_key,
+        "mediumKey":    medium_key,
     }

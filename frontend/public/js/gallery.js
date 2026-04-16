@@ -22,7 +22,6 @@ let pollTimer = null;
 
 // ── Fetch and render photos ──────────────────────────────────────────────────
 async function fetchPhotos() {
-  // GET /api/photos → Nginx → gallery-service (Node.js + Express)
   const res = await fetch('/api/photos/', {
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -38,7 +37,6 @@ async function fetchPhotos() {
 }
 
 function renderGallery(photos) {
-  // Clear existing cards (except empty-state placeholder)
   const cards = galleryEl.querySelectorAll('.photo-card');
   cards.forEach(c => c.remove());
 
@@ -52,15 +50,12 @@ function renderGallery(photos) {
   photos.forEach(photo => {
     const card = document.createElement('div');
     card.className = 'photo-card';
+    card.dataset.id = photo.id;
 
     if (photo.status === 'processed' && photo.thumbnail_path) {
-      // Thumbnail path stored as an absolute container path (/uploads/thumbnails/xxx.jpg).
-      // Nginx serves /uploads/ via the alias directive — path maps directly to a URL.
-      const imgSrc = photo.thumbnail_path; // e.g. /uploads/thumbnails/uuid.jpg
-
       const img = document.createElement('img');
-      img.src   = imgSrc;
-      img.alt   = photo.original_filename;
+      img.src     = photo.thumbnail_path;
+      img.alt     = photo.original_filename;
       img.loading = 'lazy';
       img.addEventListener('click', () => openLightbox(photo));
       card.appendChild(img);
@@ -70,7 +65,6 @@ function renderGallery(photos) {
       badge.textContent = 'processed';
       card.appendChild(badge);
     } else {
-      // Not yet processed — show a spinner placeholder
       card.innerHTML = `
         <div class="processing-placeholder">
           <span class="spinner"></span>
@@ -85,15 +79,68 @@ function renderGallery(photos) {
     caption.textContent = photo.original_filename;
     card.appendChild(caption);
 
+    // ── Delete button ──────────────────────────────────────────────────────
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.title = 'Delete photo';
+    deleteBtn.innerHTML = '&times;';
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't open lightbox
+      confirmDelete(photo, card);
+    });
+    card.appendChild(deleteBtn);
+
     galleryEl.appendChild(card);
   });
 }
 
-// ── Polling ───────────────────────────────────────────────────────────────────
-// When any photo is still pending, poll every 3 seconds to pick up the
-// 'processed' status update. This demonstrates eventual consistency —
-// students can watch the thumbnails appear in real time.
+// ── Delete ────────────────────────────────────────────────────────────────────
+async function confirmDelete(photo, card) {
+  if (!confirm(`Delete "${photo.original_filename}"?\nThis will also remove all processed variants from MinIO.`)) {
+    return;
+  }
 
+  // Optimistically remove the card from the DOM
+  card.style.opacity = '0.4';
+  card.style.pointerEvents = 'none';
+
+  try {
+    // DELETE /api/photos/:id → Nginx → gallery-service
+    // gallery-service deletes from PostgreSQL + MinIO (original + thumbnail + medium)
+    const res = await fetch(`/api/photos/${photo.id}`, {
+      method:  'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (res.status === 403) {
+      alert('You can only delete your own photos.');
+      card.style.opacity = '';
+      card.style.pointerEvents = '';
+      return;
+    }
+
+    if (!res.ok) {
+      alert('Delete failed. Please try again.');
+      card.style.opacity = '';
+      card.style.pointerEvents = '';
+      return;
+    }
+
+    // Remove card from DOM
+    card.remove();
+
+    // Show empty state if no cards remain
+    if (!galleryEl.querySelector('.photo-card')) {
+      emptyStateEl.classList.remove('hidden');
+    }
+  } catch {
+    alert('Network error — could not delete photo.');
+    card.style.opacity = '';
+    card.style.pointerEvents = '';
+  }
+}
+
+// ── Polling ───────────────────────────────────────────────────────────────────
 async function loadAndRender() {
   try {
     const photos = await fetchPhotos();
@@ -103,7 +150,6 @@ async function loadAndRender() {
 
     if (anyPending) {
       pollingIndicator.classList.remove('hidden');
-      // Schedule next poll
       pollTimer = setTimeout(loadAndRender, 3000);
     } else {
       pollingIndicator.classList.add('hidden');
@@ -116,7 +162,7 @@ async function loadAndRender() {
 
 // ── Lightbox ──────────────────────────────────────────────────────────────────
 function openLightbox(photo) {
-  lightboxImg.src     = photo.medium_path || photo.thumbnail_path;
+  lightboxImg.src = photo.medium_path || photo.thumbnail_path;
   lightboxCaption.textContent = photo.original_filename;
   lightbox.classList.remove('hidden');
   document.body.style.overflow = 'hidden';

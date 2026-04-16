@@ -38,6 +38,47 @@ services:
       timeout: 10s
       retries: 10
 
+  # MinIO — S3-compatible object storage
+  # Replaces the shared Docker volume used previously.
+  # Teaching moment: object storage vs. filesystem, presigned URLs, bucket policies.
+  minio:
+    image: minio/minio:latest
+    container_name: demo-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9001:9001"     # MinIO Console UI — open http://localhost:9001 in class
+    volumes:
+      - minio_data:/data
+    networks:
+      - demo-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  # One-shot init container — creates the 'photos' bucket and sets it public.
+  # Retries until MinIO is reachable, then exits cleanly.
+  minio-init:
+    image: minio/mc:latest
+    container_name: demo-minio-init
+    networks:
+      - demo-net
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin 2>/dev/null; do
+        echo 'Waiting for MinIO to be ready...'; sleep 2;
+      done &&
+      mc mb --ignore-existing local/photos &&
+      mc anonymous set public local/photos &&
+      echo 'MinIO bucket ready'
+      "
+
   # ─────────────────────────────────────────
   # Microservices
   # ─────────────────────────────────────────
@@ -71,10 +112,12 @@ services:
       DB_PASSWORD: demo123
       DB_NAME: gallery_db
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-      UPLOAD_DIR: /uploads
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: photos
       PORT: "8002"
-    volumes:
-      - uploads:/uploads
     networks:
       - demo-net
     depends_on:
@@ -82,6 +125,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
 
   # 3. Image Processing Service — Python + FastAPI
   image-processor:
@@ -89,15 +134,18 @@ services:
     container_name: demo-processor
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-      UPLOAD_DIR: /uploads
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: photos
       PROCESSING_DELAY: "8"   # seconds — set to 0 to disable, increase for slower demos
-    volumes:
-      - uploads:/uploads
     networks:
       - demo-net
     depends_on:
       rabbitmq:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
 
   # ─────────────────────────────────────────
   # Frontend
@@ -108,8 +156,6 @@ services:
     container_name: demo-frontend
     ports:
       - "3000:80"     # open http://localhost:3000 to use the app
-    volumes:
-      - uploads:/uploads:ro   # read-only: nginx serves images from shared volume
     networks:
       - demo-net
     depends_on:
@@ -122,7 +168,7 @@ services:
 
 volumes:
   postgres_data:
-  uploads:         # shared between gallery-service, image-processor, and frontend
+  minio_data:     # MinIO object storage (replaces the uploads named volume)
 
 networks:
   demo-net:
