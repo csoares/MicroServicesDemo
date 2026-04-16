@@ -61,7 +61,7 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant Vol as Shared Volume
 
-    User->>Nginx: POST /api/photos/upload<br/>Authorization: Bearer &lt;jwt&gt;
+    User->>Nginx: POST /api/photos/upload (Authorization: Bearer [jwt])
     Nginx->>Gallery: POST /photos/upload
 
     Gallery->>Auth: GET /auth/validate (Bearer token)
