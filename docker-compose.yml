@@ -90,6 +90,7 @@ services:
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       UPLOAD_DIR: /uploads
+      PROCESSING_DELAY: "8"   # seconds — set to 0 to disable, increase for slower demos
     volumes:
       - uploads:/uploads
     networks:

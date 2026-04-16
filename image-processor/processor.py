@@ -7,9 +7,14 @@ Teaching note:
 """
 
 import os
+import time
 from PIL import Image
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/uploads")
+
+# Set PROCESSING_DELAY (seconds) in docker-compose.yml to simulate a slow
+# processing pipeline — useful in class to show the pending → processed transition.
+PROCESSING_DELAY = int(os.getenv("PROCESSING_DELAY", "0"))
 
 
 def process_image(original_path: str, photo_id: str) -> dict:
@@ -20,6 +25,9 @@ def process_image(original_path: str, photo_id: str) -> dict:
     Returns:
         dict with 'thumbnailPath' and 'mediumPath' keys.
     """
+    if PROCESSING_DELAY > 0:
+        time.sleep(PROCESSING_DELAY)
+
     with Image.open(original_path) as img:
         # convert("RGB") normalises all formats (PNG/RGBA, GIF palette, etc.) to JPEG-compatible.
         # Without this, saving a PNG with an alpha channel as JPEG raises:
